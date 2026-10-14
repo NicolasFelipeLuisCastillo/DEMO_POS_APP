@@ -1,0 +1,58 @@
+services:
+  # ─────────────────────────────────────────────────────────────────────
+  # BUILD: compila el .deb y lo deja en ./release/ del host
+  # Uso: docker compose run --rm build
+  # ─────────────────────────────────────────────────────────────────────
+  build:
+    build: .
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - target:/app/src-tauri/target
+      - cargo_cache:/usr/local/cargo/registry
+    command: >
+      sh -c "
+        echo '▶ npm ci…' && npm ci --no-audit --no-fund &&
+        echo '▶ tauri build…' && npm run tauri:build &&
+        echo '▶ copiando .deb…' &&
+        mkdir -p /app/release &&
+        cp /app/src-tauri/target/release/bundle/deb/*.deb /app/release/ &&
+        echo '✅ Listo:' && ls -lh /app/release/
+      "
+
+  # ─────────────────────────────────────────────────────────────────────
+  # SHELL: terminal interactiva dentro del container
+  # Uso: docker compose run --rm shell
+  # Útil para correr tests, lint, o cualquier comando del equipo.
+  # ─────────────────────────────────────────────────────────────────────
+  shell:
+    build: .
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - target:/app/src-tauri/target
+      - cargo_cache:/usr/local/cargo/registry
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+
+  # ─────────────────────────────────────────────────────────────────────
+  # DEV: vite dev server (solo web, sin ventana Tauri)
+  # Útil para iterar UI rápido. Abrí http://localhost:1420 en el browser.
+  # Uso: docker compose up dev
+  # ─────────────────────────────────────────────────────────────────────
+  dev:
+    build: .
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - target:/app/src-tauri/target
+      - cargo_cache:/usr/local/cargo/registry
+    ports:
+      - "1420:1420"
+    command: npm run dev
+
+volumes:
+  node_modules:    # node_modules de Linux (no los de Windows)
+  target:          # target/ de Rust (cache de compilación)
+  cargo_cache:     # registry de crates (no se re-descarga)

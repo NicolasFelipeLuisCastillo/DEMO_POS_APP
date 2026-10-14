@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Tauri build outputs
+src-tauri/target/
+src-tauri/gen/
+src-tauri/Cargo.lock
+src-tauri/WixTools/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

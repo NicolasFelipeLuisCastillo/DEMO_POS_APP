@@ -1,0 +1,71 @@
+name: Build Suma (.deb + AppImage)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-tauri:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+
+      - name: Install npm deps
+        run: npm ci || npm install
+
+      - name: Build with Tauri
+        run: npm run tauri:build
+
+      - name: List bundles
+        run: |
+          echo "=== .deb ==="
+          find src-tauri/target/release/bundle/deb -type f -name "*.deb" -exec ls -lh {} \;
+          echo "=== AppImage ==="
+          find src-tauri/target/release/bundle/appimage -type f -name "*.AppImage" -exec ls -lh {} \;
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: suma-debian
+          path: src-tauri/target/release/bundle/deb/*.deb
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: suma-appimage
+          path: src-tauri/target/release/bundle/appimage/*.AppImage

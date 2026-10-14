@@ -1,0 +1,27 @@
+# No incluir artefactos en el contexto de build de Docker
+node_modules
+dist
+release
+src-tauri/target
+src-tauri/gen
+src-tauri/Cargo.lock
+
+# IDE y sistema
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos grandes / generados
+*.deb
+*.AppImage
+*.msi
+*.exe
